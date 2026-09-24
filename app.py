@@ -15,31 +15,35 @@ app = Flask(__name__)
 # LOAD DATASET
 # -----------------------------
 
-DATA_PATH = "dataset/SayOjiPillow.csv"
+DATA_PATH = "SayOPillow.csv"
 
 df = pd.read_csv(DATA_PATH)
 
+
+# Actual columns in the dataset
 features = [
-    "snoring",
-    "respiration_rate",
-    "body_temp",
-    "limb_movement",
-    "blood_oxygen",
-    "eye_movement",
-    "sleep_hours",
-    "heart_rate"
+    "sr",
+    "rr",
+    "t",
+    "lm",
+    "bo",
+    "rem",
+    "sr.1",
+    "hr"
 ]
 
-# Create binary stress target
-df["stressed"] = df["stress_level"].apply(
-    lambda x: 1 if x > 0 else 0
-)
+# Stress level column
+target = "sl"
 
 
 # -----------------------------
 # STAGE 1
 # STRESSED / NOT STRESSED
 # -----------------------------
+
+df["stressed"] = df[target].apply(
+    lambda x: 1 if x > 0 else 0
+)
 
 X = df[features]
 y = df["stressed"]
@@ -71,7 +75,7 @@ binary_accuracy = accuracy_score(
 stressed_df = df[df["stressed"] == 1]
 
 X2 = stressed_df[features]
-y2 = stressed_df["stress_level"]
+y2 = stressed_df[target]
 
 scaler2 = StandardScaler()
 X2_scaled = scaler2.fit_transform(X2)
@@ -104,6 +108,7 @@ def home():
     if request.method == "POST":
 
         try:
+
             values = [
                 float(request.form["snoring"]),
                 float(request.form["respiration_rate"]),
@@ -117,7 +122,7 @@ def home():
 
             input_data = np.array(values).reshape(1, -1)
 
-            # Scale input for Stage 1
+            # Stage 1
             input_scaled = scaler.transform(input_data)
 
             stress_prediction = binary_model.predict(
@@ -133,7 +138,7 @@ def home():
 
             else:
 
-                # Stage 2 prediction
+                # Stage 2
                 input_scaled_2 = scaler2.transform(input_data)
 
                 stress_level = level_model.predict(
@@ -164,3 +169,7 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+   
+
+
+
