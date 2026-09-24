@@ -96,4 +96,8 @@ Janvi Panwar
 
 BCA Graduate | Python | SQL | Data Analytics | AI & Generative AI
 
+## 📄 License
+
+This project is open source and available under the MIT License.
+
 
