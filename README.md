@@ -58,27 +58,37 @@ Stress-Detector/
 ├── templates/
 │   └── index.html
 │
-⚙️ Installation
-1. Clone the repository
+├── app.py
+├── SayOPillow.csv
+└── requirements.txt
+
+## ⚙️ Installation
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/janvipanwar09-code/Stress-Detector.git
-2. Open the project folder
 cd Stress-Detector
-3. Install dependencies
+
+### 2. Install dependencies
+```bash
 pip install -r requirements.txt
-4. Run the application
+
+### 3. Run the application
+```bash
 python app.py
-5. Open the application
 
-Open:
-
+### 4.Open in your browser 
+```bash
 http://127.0.0.1:5000
+
 🎯 Project Purpose
 
-This project demonstrates the use of machine learning and Flask to build a web-based stress detection system using sleep and physiological data.
+This project demonstrates how Machine Learning and Flask can be used to build a web-based stress detection system using physiological and sleep-related data.
 
 ⚠️ Disclaimer
 
-This project is created for educational and demonstration purposes. It is not intended to provide medical diagnosis or replace professional medical advice.
+This project is created for educational and demonstration purposes. It is not intended for medical diagnosis or to replace professional medical advice.
 
 👩‍💻 Author
 
@@ -87,9 +97,3 @@ Janvi Panwar
 BCA Graduate | Python | SQL | Data Analytics | AI & Generative AI
 
 
-**Bas poora paste karo → Commit changes.** ❤️
-
-Screenshot abhi README mein nahi daal rahe; pehle README properly save kar lete hain.
-├── app.py
-├── SayOPillow.csv
-└── requirements.txt
