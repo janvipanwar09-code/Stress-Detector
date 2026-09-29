@@ -1,29 +1,29 @@
 from flask import Flask, render_template, request
+import os
 import pandas as pd
 import numpy as np
-import os
-
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
 
 
 app = Flask(__name__)
 
 
 # -----------------------------
-# LOAD DATASET
+# DATASET PATH
 # -----------------------------
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "SayOPillow.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, "SayOPillow.csv")
 
-df = pd.read_csv(DATA_PATH)
 
+# -----------------------------
+# FEATURES
+# -----------------------------
 
-# Actual columns in the dataset
-features = [
+FEATURES = [
     "sr",
     "rr",
     "t",
@@ -34,68 +34,34 @@ features = [
     "hr"
 ]
 
-# Stress level column
-target = "sl"
-
 
 # -----------------------------
-# STAGE 1
-# STRESSED / NOT STRESSED
+# LOAD MODEL
 # -----------------------------
 
-df["stressed"] = df[target].apply(
-    lambda x: 1 if x > 0 else 0
-)
+def train_model():
 
-X = df[features]
-y = df["stressed"]
+    if not os.path.exists(DATA_PATH):
+        raise FileNotFoundError(
+            "SayOPillow.csv was not found in the project folder."
+        )
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+    df = pd.read_csv(DATA_PATH)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled,
-    y,
-    test_size=0.2,
-    random_state=42
-)
+    X = df[FEATURES]
+    y = df["sl"]
 
-binary_model = LogisticRegression()
-binary_model.fit(X_train, y_train)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-binary_accuracy = accuracy_score(
-    y_test,
-    binary_model.predict(X_test)
-)
+    model = LogisticRegression(
+        max_iter=2000,
+        random_state=42
+    )
 
+    model.fit(X_scaled, y)
 
-# -----------------------------
-# STAGE 2
-# STRESS LEVEL 1-4
-# -----------------------------
-
-stressed_df = df[df["stressed"] == 1]
-
-X2 = stressed_df[features]
-y2 = stressed_df[target]
-
-scaler2 = StandardScaler()
-X2_scaled = scaler2.fit_transform(X2)
-
-X2_train, X2_test, y2_train, y2_test = train_test_split(
-    X2_scaled,
-    y2,
-    test_size=0.2,
-    random_state=42
-)
-
-level_model = LogisticRegression(max_iter=1000)
-level_model.fit(X2_train, y2_train)
-
-level_accuracy = accuracy_score(
-    y2_test,
-    level_model.predict(X2_test)
-)
+    return model, scaler
 
 
 # -----------------------------
@@ -105,73 +71,72 @@ level_accuracy = accuracy_score(
 @app.route("/", methods=["GET", "POST"])
 def home():
 
-    result = None
+    prediction = None
+    error = None
 
     if request.method == "POST":
 
         try:
 
-            values = [
-                float(request.form["snoring"]),
-                float(request.form["respiration_rate"]),
-                float(request.form["body_temp"]),
-                float(request.form["limb_movement"]),
-                float(request.form["blood_oxygen"]),
-                float(request.form["eye_movement"]),
-                float(request.form["sleep_hours"]),
-                float(request.form["heart_rate"])
-            ]
+            values = []
+
+            for feature in FEATURES:
+
+                value = request.form.get(feature)
+
+                if value is None or value.strip() == "":
+                    raise ValueError(
+                        f"Missing value for {feature}"
+                    )
+
+                values.append(float(value))
+
+            model, scaler = train_model()
 
             input_data = np.array(values).reshape(1, -1)
 
-            # Stage 1
             input_scaled = scaler.transform(input_data)
 
-            stress_prediction = binary_model.predict(
-                input_scaled
-            )[0]
+            result = model.predict(input_scaled)[0]
 
-            if stress_prediction == 0:
+            stress_levels = {
+                0: "Low Stress",
+                1: "Mild Stress",
+                2: "Moderate Stress",
+                3: "High Stress",
+                4: "Very High Stress"
+            }
 
-                result = {
-                    "status": "Not Stressed",
-                    "level": "No significant stress detected."
-                }
-
-            else:
-
-                # Stage 2
-                input_scaled_2 = scaler2.transform(input_data)
-
-                stress_level = level_model.predict(
-                    input_scaled_2
-                )[0]
-
-                result = {
-                    "status": "Stress Detected",
-                    "level": f"Stress Level: {stress_level} / 4"
-                }
+            prediction = stress_levels.get(
+                int(result),
+                f"Stress Level {int(result)}"
+            )
 
         except Exception as e:
 
-            result = {
-                "status": "Error",
-                "level": str(e)
-            }
+            error = str(e)
 
     return render_template(
         "index.html",
-        result=result
+        prediction=prediction,
+        error=error
     )
 
 
 # -----------------------------
-# RUN APPLICATION
+# VERCEL ENTRY POINT
 # -----------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
    
 
 
 
+
+
+
+                
