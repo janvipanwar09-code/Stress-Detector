@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import numpy as np
+import os
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -15,7 +17,7 @@ app = Flask(__name__)
 # LOAD DATASET
 # -----------------------------
 
-DATA_PATH = "SayOPillow.csv"
+DATA_PATH = os.path.join(os.path.dirname(__file__), "SayOPillow.csv")
 
 df = pd.read_csv(DATA_PATH)
 
